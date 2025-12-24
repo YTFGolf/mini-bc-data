@@ -4,6 +4,12 @@ import requests
 import os
 
 
+################################################################################
+# Most code in this file is taken from tbcml, in particular src/tbcml/io/apk.py
+################################################################################
+
+
+# https://codeberg.org/fieryhenry/tbcml/src/branch/master/src/tbcml/io/file_handler.py
 class FileSize:
     def __init__(self, file_size: int):
         self.file_size = file_size
@@ -27,7 +33,7 @@ class FileSize:
             return f"{self.file_size / 1024 ** 4:.2f} TB"
 
 
-
+# https://codeberg.org/fieryhenry/tbcml/src/branch/master/src/tbcml/country_code.py
 class CountryCode(enum.Enum):
     """Country code enum."""
 

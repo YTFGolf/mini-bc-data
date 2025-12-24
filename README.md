@@ -16,6 +16,11 @@ This project aims to provide a few scritps that partially automate this process.
 - [ ] Extract APKS: not done yet but File Roller seems to support it so shouldn't be that difficult I hope (and even then it's not that difficult to do manually)
 - [ ] Decrypt data: right now needs BCGM
 
+## Requirements
+
+- Python (developed with 3.12)
+- [requests](https://docs.python-requests.org/en/latest/index.html) library
+
 ## Licensing
 
 This project uses code from <https://codeberg.org/fieryhenry/tbcml> and as such is licensed under the same terms, GPLv3.
