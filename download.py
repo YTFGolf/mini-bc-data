@@ -1,5 +1,5 @@
 import enum
-from typing import Literal, Any, Self
+from typing import Literal, Any, Self, TypedDict
 import requests
 import os
 
@@ -65,6 +65,22 @@ class CountryCode(enum.Enum):
         raise ValueError(f'{code!r} is not a valid country code!')
 
 
+class VersionURL(TypedDict):
+    url: str
+    extraURL: str
+    versionID: int
+
+class UptodownVersion(TypedDict):
+    fileID: int
+    version: str
+    minSDK: str
+    lastUpdate: str
+    sdkVersion: str
+    kindFile: str
+    titleKindFile: str
+    versionURL: VersionURL
+
+
 def get_uptodown(url, **kwargs):
     return requests.get(url, headers={'user-agent': "WWR's auto APK getter"}, **kwargs)
 
@@ -90,7 +106,7 @@ def get_uptodown_app_id(country_code: CountryCode) -> str | None:
 
     return data
 
-def get_uptodown_apk_json(country_code: CountryCode) -> list[dict[str, Any]]:
+def get_uptodown_apk_json(country_code: CountryCode) -> list[UptodownVersion]:
     package_name = get_uptodown_pkg_name(country_code)
     app_id = get_uptodown_app_id(country_code)
     if app_id is None:
