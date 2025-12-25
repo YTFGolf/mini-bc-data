@@ -4,17 +4,6 @@ import requests
 import os
 import sys
 
-
-# https://stackoverflow.com/a/14981125
-def eprint(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
-raw_print = print
-def print(*args, **kwargs):
-    raw_print(*args, **kwargs)
-    # if you want to disable printing comment out this line
-    pass
-
-
 ################################################################################
 # Most code in this file is taken from tbcml, in particular src/tbcml/io/apk.py
 ################################################################################
@@ -249,18 +238,29 @@ def download_uptodown(version: str, country_code: CountryCode, containing_folder
         print()
         print(abs_path)
 
-try:
-    version = sys.argv[1]
-    cc = sys.argv[2]
-except IndexError:
-    quit("Usage: python download.py <version_num> <country_code>")
+if __name__ == '__main__':
 
-try:
-    containing_folder = sys.argv[3]
-except IndexError:
-    containing_folder = os.getcwd() + '/data'
-    print(f'Using default containing folder: {containing_folder!r}')
+    # https://stackoverflow.com/a/14981125
+    def eprint(*args, **kwargs):
+        print(*args, file=sys.stderr, **kwargs)
+    raw_print = print
+    def print(*args, **kwargs):
+        raw_print(*args, **kwargs)
+        # if you want to disable printing comment out this line
+        pass
 
-cc = CountryCode.from_cc(cc)
+    try:
+        version = sys.argv[1]
+        cc = sys.argv[2]
+    except IndexError:
+        quit("Usage: python download.py <version_num> <country_code>")
 
-download_uptodown(version, cc, containing_folder)
+    try:
+        containing_folder = sys.argv[3]
+    except IndexError:
+        containing_folder = os.getcwd() + '/data'
+        print(f'Using default containing folder: {containing_folder!r}')
+
+    cc = CountryCode.from_cc(cc)
+
+    download_uptodown(version, cc, containing_folder)
