@@ -2,6 +2,7 @@ import enum
 from typing import Literal, Any, Self, TypedDict
 import requests
 import os
+import sys
 
 
 ################################################################################
@@ -189,8 +190,9 @@ def progress(
         end="",
     )
 
-def download_uptodown():
-    url = get_uptodown_download_url("14.7", CountryCode.from_cc("jp"))
+def download_uptodown(version: str, country_code: CountryCode):
+    url = get_uptodown_download_url(version, country_code)
+    quit(url)
     stream = get_uptodown(url, stream=True)
     if stream.status_code == 404:
         return tbcml.Result(False, error=f"Download url returned 404: {url}")
@@ -216,4 +218,12 @@ def download_uptodown():
     with open(filename, "wb") as f:
         f.write(apk)
 
-download_uptodown()
+try:
+    version = sys.argv[1]
+    cc = sys.argv[2]
+except IndexError:
+    quit("Usage: python download.py <version_num> <country_code>")
+
+cc = CountryCode.from_cc(cc)
+
+download_uptodown(version, cc)
