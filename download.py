@@ -88,6 +88,18 @@ class UptodownVersion(TypedDict):
 def get_uptodown(url, **kwargs):
     return requests.get(url, headers={'user-agent': "WWR's auto APK getter"}, **kwargs)
 
+def get_apkpure_version_url(cc: CountryCode) -> str:
+    if cc == CountryCode.JP:
+        url = "https://apkpure.com/%E3%81%AB%E3%82%83%E3%82%93%E3%81%93%E5%A4%A7%E6%88%A6%E4%BA%89/jp.co.ponos.battlecats/versions"
+    elif cc == CountryCode.KR:
+        url = "https://apkpure.com/%EB%83%A5%EC%BD%94-%EB%8C%80%EC%A0%84%EC%9F%81/jp.co.ponos.battlecatskr/versions"
+    elif cc == CountryCode.TW:
+        url = "https://apkpure.com/%E8%B2%93%E5%92%AA%E5%A4%A7%E6%88%B0%E7%88%AD/jp.co.ponos.battlecatstw/versions"
+    elif cc == CountryCode.EN:
+        url = "https://apkpure.com/the-battle-cats/jp.co.ponos.battlecatsen/versions"
+
+    return url
+
 def get_uptodown_pkg_name(country_code: CountryCode) -> str:
     if country_code == CountryCode.EN:
         return "the-battle-cats"
@@ -144,7 +156,10 @@ def get_uptodown_download_url(version: str, country_code: CountryCode) -> str:
             n.append(base + '-x')
 
     if len(n) == 0:
-        raise ValueError(f'Version {country_code}/{version!r} could not be found on uptodown')
+        raise ValueError(
+            f'Version {country_code}/{version!r} could not be found on uptodown. ' \
+            f'You may want to manually download from {get_apkpure_version_url(country_code)}.'
+        )
 
     res = get_uptodown(n[0]).text
     data = res[res.find("detail-download-button"):]
