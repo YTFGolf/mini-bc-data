@@ -128,11 +128,19 @@ def get_uptodown_apk_json(country_code: CountryCode) -> list[UptodownVersion]:
 def get_uptodown_download_url(version: str, country_code: CountryCode) -> str:
     js = get_uptodown_apk_json(country_code)
     n = []
+
+    version_split = version.split('.')
     for version2 in js:
-        if version2['version'].startswith(version):
+        for (n1, n2) in zip(version_split, version2['version'].split('.')):
+            if n1 != n2:
+                break
+        else:
             v = version2['versionURL']
             base = '/'.join([v['url'], v['extraURL'], str(v['versionID'])])
             n.append(base + '-x')
+
+    if len(n) == 0:
+        raise ValueError(f'Version {country_code}/{version!r} could not be found on uptodown')
 
     res = get_uptodown(n[0]).text
     data = res[res.find("detail-download-button"):]
