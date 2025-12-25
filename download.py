@@ -65,6 +65,9 @@ class CountryCode(enum.Enum):
 
         raise ValueError(f'{code!r} is not a valid country code!')
 
+    def __str__(self):
+        return self.value
+
 
 class VersionURL(TypedDict):
     url: str
@@ -192,7 +195,6 @@ def progress(
 
 def download_uptodown(version: str, country_code: CountryCode):
     url = get_uptodown_download_url(version, country_code)
-    quit(url)
     stream = get_uptodown(url, stream=True)
     if stream.status_code == 404:
         return tbcml.Result(False, error=f"Download url returned 404: {url}")
