@@ -5,6 +5,16 @@ import os
 import sys
 
 
+# https://stackoverflow.com/a/14981125
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+raw_print = print
+def print(*args, **kwargs):
+    raw_print(*args, **kwargs)
+    # if you want to disable printing comment out this line
+    pass
+
+
 ################################################################################
 # Most code in this file is taken from tbcml, in particular src/tbcml/io/apk.py
 ################################################################################
@@ -208,7 +218,7 @@ def progress(
         end="",
     )
 
-def download_uptodown(version: str, country_code: CountryCode):
+def download_uptodown(version: str, country_code: CountryCode, containing_folder: str):
     url = get_uptodown_download_url(version, country_code)
     stream = get_uptodown(url, stream=True)
     if stream.status_code == 404:
@@ -230,10 +240,14 @@ def download_uptodown(version: str, country_code: CountryCode):
                 )
 
     apk = to_data(b"".join(buffer))
-    filename = "./data/apk"
-    os.makedirs(os.path.dirname(filename), exist_ok=True)
-    with open(filename, "wb") as f:
+    filename = f'{country_code}-{version}.apk'
+    abs_path = os.path.join(containing_folder, filename)
+    os.makedirs(os.path.dirname(abs_path), exist_ok=True)
+
+    with open(abs_path, "wb") as f:
         f.write(apk)
+        print()
+        print(abs_path)
 
 try:
     version = sys.argv[1]
@@ -241,6 +255,12 @@ try:
 except IndexError:
     quit("Usage: python download.py <version_num> <country_code>")
 
+try:
+    containing_folder = sys.argv[3]
+except IndexError:
+    containing_folder = os.getcwd() + '/data'
+    print(f'Using default containing folder: {containing_folder!r}')
+
 cc = CountryCode.from_cc(cc)
 
-download_uptodown(version, cc)
+download_uptodown(version, cc, containing_folder)
