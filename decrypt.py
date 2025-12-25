@@ -3,6 +3,7 @@ import hashlib
 import sys
 import os
 from Crypto.Cipher import AES
+from download import progress, CountryCode
 
 # this file is adapted from
 # https://www.reddit.com/r/battlecats/comments/41e4l1/comment/cz6zeat/
@@ -72,25 +73,6 @@ def decrypt_pack(chunk_data, jp, pk_name):
     return decrypted_data
 
 # TODO reduce duplication from download.py
-def progress(
-    progress: float,
-    current: int,
-    total: int,
-    is_file_size: bool = False,
-):
-    total_bar_length = 50
-    if is_file_size:
-        current_str = FileSize(current).format()
-        total_str = FileSize(total).format()
-    else:
-        current_str = str(current)
-        total_str = str(total)
-    bar_length = int(total_bar_length * progress)
-    bar = "#" * bar_length + "-" * (total_bar_length - bar_length)
-    print(
-        f"\r[{bar}] {int(progress * 100)}% ({current_str}/{total_str})    ",
-        end="",
-    )
 
 def unpack_pack(pk_file_path, ls_data, jp, base_path):
     list_data = ls_data.decode("utf-8")
@@ -119,7 +101,7 @@ def unpack_pack(pk_file_path, ls_data, jp, base_path):
 
     print()
 
-container = sys.argv[1]
+container = sys.argv[1].rstrip('/\\')
 
 file = 'DataLocal'
 list_file = os.path.join(container, 'assets', f'{file}.list')
@@ -128,6 +110,7 @@ pack_file = os.path.join(container, 'assets', f'{file}.pack')
 list_data = unpack_list(list_file)
 extracted_name = os.path.basename(container)
 base_path = os.path.join('./data/decrypted', extracted_name)
+print("extracting to", base_path)
 os.makedirs(base_path, exist_ok=True)
 
 is_jp = 'jp' in container
