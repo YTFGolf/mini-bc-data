@@ -50,15 +50,31 @@ def parse_csv_file(path, lines=None, min_length=0, black_list=None):
         data.append(line_data)
     return data
 
+# https://codeberg.org/fieryhenry/tbcml/src/branch/master/src/tbcml/crypto.py
+# https://codeberg.org/fieryhenry/tbcml/src/commit/4eede7d7af9b770dceb08ef6313f62aabe2fc45d/src/tbcml/crypto.py#L139
 
-def decrypt_pack(chunk_data, jp, pk_name):
+def get_key_iv_from_cc(cc: CountryCode) -> tuple[str, str]:
+        if cc == CountryCode.JP:
+            key = "d754868de89d717fa9e7b06da45ae9e3"
+            iv = "40b2131a9f388ad4e5002a98118f6128"
+        elif cc == CountryCode.EN:
+            key = "0ad39e4aeaf55aa717feb1825edef521"
+            iv = "d1d7e708091941d90cdf8aa5f30bb0c2"
+        elif cc == CountryCode.KR:
+            key = "bea585eb993216ef4dcb88b625c3df98"
+            iv = "9b13c2121d39f1353a125fed98696649"
+        elif cc == CountryCode.TW:
+            key = "313d9858a7fb939def1d7d859629087d"
+            iv = "0e3743eb53bf5944d1ae7e10c2e54bdf"
+        else:
+            raise ValueError("Unknown country code")
+        return key, iv
+
+def decrypt_pack(chunk_data, cc, pk_name):
     aes_mode = AES.MODE_CBC
-    if jp:
-        key = bytes.fromhex("d754868de89d717fa9e7b06da45ae9e3")
-        iv = bytes.fromhex("40b2131a9f388ad4e5002a98118f6128")
-    else:
-        key = bytes.fromhex("0ad39e4aeaf55aa717feb1825edef521")
-        iv = bytes.fromhex("d1d7e708091941d90cdf8aa5f30bb0c2")
+
+    skey, siv = get_key_iv_from_cc(cc)
+    key, iv = bytes.fromhex(skey), bytes.fromhex(siv)
 
     if "server" in pk_name.lower():
         key = md5_str("battlecats")
@@ -72,9 +88,7 @@ def decrypt_pack(chunk_data, jp, pk_name):
     decrypted_data = remove_pkcs7_padding(data=decrypted_data)
     return decrypted_data
 
-# TODO reduce duplication from download.py
-
-def unpack_pack(pk_file_path, ls_data, jp, base_path):
+def unpack_pack(pk_file_path, ls_data, cc, base_path):
     list_data = ls_data.decode("utf-8")
     split_data = parse_csv_file(None, list_data.split("\n"), 3)
 
@@ -92,7 +106,7 @@ def unpack_pack(pk_file_path, ls_data, jp, base_path):
         if "imagedatalocal" in base_name.lower():
             pk_chunk_decrypted = pk_chunk
         else:
-            pk_chunk_decrypted = decrypt_pack(pk_chunk, jp, base_name)
+            pk_chunk_decrypted = decrypt_pack(pk_chunk, cc, base_name)
 
         open(os.path.join(base_path, name), "wb").write(pk_chunk_decrypted)
 
@@ -113,5 +127,7 @@ base_path = os.path.join('./data/decrypted', extracted_name)
 print("extracting to", base_path)
 os.makedirs(base_path, exist_ok=True)
 
-is_jp = 'jp' in container
-unpack_pack(pack_file, list_data, is_jp, base_path)
+[lang, *_] = extracted_name.partition('-')
+cc = CountryCode.from_cc(lang)
+
+unpack_pack(pack_file, list_data, cc, base_path)
