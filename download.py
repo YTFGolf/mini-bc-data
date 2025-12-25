@@ -50,11 +50,19 @@ class CountryCode(enum.Enum):
 
     @staticmethod
     def from_code(code: str) -> Self:
-        code = code.lower()
+        map = {
+            "ja": "jp",
+            "ko": "kr",
+        }
+        # alternative names for these codes
+        codel = code.lower()
+        if codel in map:
+            codel = map[codel]
         for country_code in CountryCode:
-            if country_code.value == code:
+            if country_code.value == codel:
                 return country_code
-        return CountryCode.JP
+
+        raise ValueError(f'{code!r} is not a valid country code!')
 
 
 def get_uptodown(url, **kwargs):
