@@ -26,7 +26,7 @@ Main goal is just to do the install process with as little code as possible.
 
 ## Requirements
 
-- Python (developed with 3.12)
+- Python (tested on 3.9 and 3.12)
 - download: [requests](https://docs.python-requests.org/en/latest/index.html) library
 - decrypt: [pycryptodome](https://pypi.org/project/pycryptodome/) package
 

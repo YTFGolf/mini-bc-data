@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import enum
-from typing import Literal, Any, Self, TypedDict
+from typing import Literal, Any, TypedDict
 import requests
 import os
 import sys
@@ -43,13 +45,13 @@ class CountryCode(enum.Enum):
     TW = "tw"
 
     @staticmethod
-    def from_cc(cc: Literal["en"] | Literal["jp"] | Literal["kr"] | Literal["tw"] | Self):
+    def from_cc(cc: Literal["en"] | Literal["jp"] | Literal["kr"] | Literal["tw"] | CountryCode):
         if isinstance(cc, str):
             return CountryCode.from_code(cc)
         return cc
 
     @staticmethod
-    def from_code(code: str) -> Self:
+    def from_code(code: str) -> CountryCode:
         map = {
             "ja": "jp",
             "ko": "kr",
