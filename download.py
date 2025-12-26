@@ -26,13 +26,13 @@ class FileSize:
         if self.file_size < 1024:
             return f"{self.file_size} B"
         elif self.file_size < 1024**2:
-            return f"{self.file_size / 1024:.2f} KB"
+            return f"{self.file_size / 1024:.2f} KiB"
         elif self.file_size < 1024**3:
-            return f"{self.file_size / 1024 ** 2:.2f} MB"
+            return f"{self.file_size / 1024 ** 2:.2f} MiB"
         elif self.file_size < 1024**4:
-            return f"{self.file_size / 1024 ** 3:.2f} GB"
+            return f"{self.file_size / 1024 ** 3:.2f} GiB"
         else:
-            return f"{self.file_size / 1024 ** 4:.2f} TB"
+            return f"{self.file_size / 1024 ** 4:.2f} TiB"
 
 
 # https://codeberg.org/fieryhenry/tbcml/src/branch/master/src/tbcml/country_code.py
