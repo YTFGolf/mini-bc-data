@@ -6,9 +6,38 @@ from Crypto.Cipher import AES
 from download import progress, CountryCode
 
 # this file is adapted from
-# https://www.reddit.com/r/battlecats/comments/41e4l1/comment/cz6zeat/
-# and
 # https://codeberg.org/fieryhenry/BCGM-Python/src/branch/master/src/BCGM_Python/encrypt_decrypt/decrypt_pack.py
+# which is actually under a different license which reads as
+
+"""
+MIT License
+
+Copyright (c) [2022] [fieryhenry]
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+"""
+
+# The license thing is a little confusing to me, but it seems like all that
+# needs to be done is to license them both _simultaneously_ (not dual
+# licensing), i.e. this project as a whole is already GPLv3 so those conditions
+# are cleared, and this license text means the MIT license conditions are
+# cleared as well.
 
 def open_file_b(path):
     with open(path, "rb") as f:
