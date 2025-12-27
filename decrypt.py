@@ -115,19 +115,32 @@ def unpack_pack(pk_file_path, ls_data, cc, base_path):
 
     print()
 
+def decryptfile(source_base_path, file):
+    list_file = os.path.join(source_base_path, 'assets', f'{file}.list')
+    pack_file = os.path.join(source_base_path, 'assets', f'{file}.pack')
+
+    list_data = unpack_list(list_file)
+    if list_data == b'0\n':
+        print(f'skipping {file}')
+        return
+
+    extracted_name = os.path.basename(source_base_path)
+    targ_base_path = os.path.join('./data/decrypted', extracted_name, file)
+    print("extracting to", targ_base_path)
+    os.makedirs(targ_base_path, exist_ok=True)
+
+    [lang, *_] = extracted_name.partition('-')
+    cc = CountryCode.from_cc(lang)
+
+    unpack_pack(pack_file, list_data, cc, targ_base_path)
+
 container = sys.argv[1].rstrip('/\\')
+names = []
+for fname in os.listdir(os.path.join(container, 'assets')):
+    name, ext = os.path.splitext(fname)
+    if ext == '.pack':
+        names.append(name)
+names.sort()
 
-file = 'DataLocal'
-list_file = os.path.join(container, 'assets', f'{file}.list')
-pack_file = os.path.join(container, 'assets', f'{file}.pack')
-
-list_data = unpack_list(list_file)
-extracted_name = os.path.basename(container)
-base_path = os.path.join('./data/decrypted', extracted_name)
-print("extracting to", base_path)
-os.makedirs(base_path, exist_ok=True)
-
-[lang, *_] = extracted_name.partition('-')
-cc = CountryCode.from_cc(lang)
-
-unpack_pack(pack_file, list_data, cc, base_path)
+for name in names:
+    decryptfile(container, name)
