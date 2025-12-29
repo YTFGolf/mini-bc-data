@@ -162,13 +162,14 @@ def decryptfile(source_base_path, file):
 
     unpack_pack(pack_file, list_data, cc, targ_base_path)
 
-container = sys.argv[1].rstrip('/\\')
-names = []
-for fname in os.listdir(os.path.join(container, 'assets')):
-    name, ext = os.path.splitext(fname)
-    if ext == '.pack':
-        names.append(name)
-names.sort()
+if __name__ == '__main__':
+    container = sys.argv[1].rstrip('/\\')
+    names = []
+    for fname in os.listdir(os.path.join(container, 'assets')):
+        name, ext = os.path.splitext(fname)
+        if ext == '.pack':
+            names.append(name)
+    names.sort()
 
-for name in names:
-    decryptfile(container, name)
+    for name in names:
+        decryptfile(container, name)
