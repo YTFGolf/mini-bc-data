@@ -57,11 +57,10 @@ def md5_str(string, length=8):
         .encode("utf-8")
     )
 
-def unpack_list(ls_file):
-    data = open_file_b(ls_file)
+def unpack_list(list_file_raw: bytes):
     key = md5_str("pack")
     cipher = AES.new(key, AES.MODE_ECB)
-    decrypted_data = cipher.decrypt(data)
+    decrypted_data = cipher.decrypt(list_file_raw)
     decrypted_data = remove_pkcs7_padding(data=decrypted_data)
     return decrypted_data
 
@@ -148,7 +147,7 @@ def decryptfile(source_base_path, file):
     list_file = os.path.join(source_base_path, 'assets', f'{file}.list')
     pack_file = os.path.join(source_base_path, 'assets', f'{file}.pack')
 
-    list_data = unpack_list(list_file)
+    list_data = unpack_list(open_file_b(list_file))
     if list_data == b'0\n':
         print(f'skipping {file}')
         return
