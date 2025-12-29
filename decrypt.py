@@ -39,18 +39,18 @@ SOFTWARE.
 # are cleared, and this license text means the MIT license conditions are
 # cleared as well.
 
-def open_file_b(path):
+def open_file_b(path: str) -> bytes:
     with open(path, "rb") as f:
         return f.read()
 
-def remove_pkcs7_padding(data):
+def remove_pkcs7_padding(data: bytes) -> bytes:
     if not data:
         return data
     padding = data[-1]
     return data[:-padding]
 
 
-def md5_str(string, length=8):
+def md5_str(string: str, length=8) -> bytes:
     return (
         bytearray(hashlib.md5(string.encode("utf-8")).digest()[:length])
         .hex()
@@ -64,16 +64,19 @@ def unpack_list(list_file_raw: bytes):
     decrypted_data = remove_pkcs7_padding(data=decrypted_data)
     return decrypted_data
 
-def parse_csv_file(path, lines=None, min_length=0, black_list=None):
+def parse_csv_file(path: str, lines: Optional[list[str]] = None, min_length = 0, blacklist = None) -> list[list[str]]:
     if not lines:
         lines = open(path, "r", encoding="utf-8").readlines()
+
     data = []
     for line in lines:
         line_data = line.split(",")
         if len(line_data) < min_length:
             continue
-        if black_list:
-            line_data = filter_list(line_data, black_list)
+
+        if blacklist:
+            # line_data = filter_list(line_data, blacklist)
+            raise NotImplementedError
 
         data.append(line_data)
     return data
@@ -82,21 +85,21 @@ def parse_csv_file(path, lines=None, min_length=0, black_list=None):
 # https://codeberg.org/fieryhenry/tbcml/src/commit/4eede7d7af9b770dceb08ef6313f62aabe2fc45d/src/tbcml/crypto.py#L139
 
 def get_key_iv_from_cc(cc: CountryCode) -> tuple[str, str]:
-        if cc == CountryCode.JP:
-            key = "d754868de89d717fa9e7b06da45ae9e3"
-            iv = "40b2131a9f388ad4e5002a98118f6128"
-        elif cc == CountryCode.EN:
-            key = "0ad39e4aeaf55aa717feb1825edef521"
-            iv = "d1d7e708091941d90cdf8aa5f30bb0c2"
-        elif cc == CountryCode.KR:
-            key = "bea585eb993216ef4dcb88b625c3df98"
-            iv = "9b13c2121d39f1353a125fed98696649"
-        elif cc == CountryCode.TW:
-            key = "313d9858a7fb939def1d7d859629087d"
-            iv = "0e3743eb53bf5944d1ae7e10c2e54bdf"
-        else:
-            raise ValueError("Unknown country code")
-        return key, iv
+    if cc == CountryCode.JP:
+        key = "d754868de89d717fa9e7b06da45ae9e3"
+        iv = "40b2131a9f388ad4e5002a98118f6128"
+    elif cc == CountryCode.EN:
+        key = "0ad39e4aeaf55aa717feb1825edef521"
+        iv = "d1d7e708091941d90cdf8aa5f30bb0c2"
+    elif cc == CountryCode.KR:
+        key = "bea585eb993216ef4dcb88b625c3df98"
+        iv = "9b13c2121d39f1353a125fed98696649"
+    elif cc == CountryCode.TW:
+        key = "313d9858a7fb939def1d7d859629087d"
+        iv = "0e3743eb53bf5944d1ae7e10c2e54bdf"
+    else:
+        raise ValueError("Unknown country code")
+    return key, iv
 
 def decrypt_pack(chunk_data, cc, pk_name):
     aes_mode = AES.MODE_CBC
