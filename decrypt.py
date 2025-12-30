@@ -51,14 +51,14 @@ def remove_pkcs7_padding(data: bytes) -> bytes:
     return data[:-padding]
 
 
-def md5_str(string: str, length=8) -> bytes:
+def md5_str(string: str, length: int=8) -> bytes:
     return (
         bytearray(hashlib.md5(string.encode("utf-8")).digest()[:length])
         .hex()
         .encode("utf-8")
     )
 
-def unpack_list(list_file_raw: bytes):
+def unpack_list(list_file_raw: bytes) -> bytes:
     key = md5_str("pack")
     cipher = AES.new(key, AES.MODE_ECB)
     decrypted_data = cipher.decrypt(list_file_raw)
@@ -69,7 +69,7 @@ def parse_csv_file(path: str, lines: Optional[list[str]] = None, min_length = 0,
     if not lines:
         lines = open(path, "r", encoding="utf-8").readlines()
 
-    data = []
+    data: list[list[str]] = []
     for line in lines:
         line_data = line.split(",")
         if len(line_data) < min_length:
@@ -120,7 +120,7 @@ def decrypt_pack(chunk_data: bytes, cc: CountryCode, pack_name: str) -> bytes:
     decrypted_data = remove_pkcs7_padding(data=decrypted_data)
     return decrypted_data
 
-def unpack_pack(list_data: bytes, pack_data: bytes, base_name: str, cc: CountryCode, targ_base_path: str):
+def unpack_pack(list_data: str, pack_data: bytes, base_name: str, cc: CountryCode, targ_base_path: str):
     files_info = parse_csv_file(None, list_data.split("\n"), 3)
 
     for i, file_info in enumerate(files_info):
@@ -149,15 +149,15 @@ def decryptfile(list_data: bytes, pack_data: bytes, base_name: str, cc: CountryC
     - cc: lang
     - targ_base_path: e.g. ./data/decrypted/en-15.0/DataLocal
     """
-    list_data = unpack_list(list_data).decode("utf-8")
-    if list_data == '0\n':
+    list_data_str = unpack_list(list_data).decode("utf-8")
+    if list_data_str == '0\n':
         print(f'skipping {base_name}')
         return
 
     print("extracting to", targ_base_path)
     os.makedirs(targ_base_path, exist_ok=True)
 
-    unpack_pack(list_data, pack_data, base_name, cc, targ_base_path)
+    unpack_pack(list_data_str, pack_data, base_name, cc, targ_base_path)
 
 if __name__ == '__main__':
     container = sys.argv[1].rstrip('/\\')
