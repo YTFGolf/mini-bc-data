@@ -227,9 +227,7 @@ def download_stream(stream: requests.Response, abs_path: str):
         if progress is not None:
             res = progress(dl / _total_length, dl, _total_length, True)
             if res is not None and not res:
-                return tbcml.Result(
-                    False, error="Download stopped by download callback"
-                )
+                raise ValueError("Download stopped by download callback")
 
     apk = to_data(b"".join(buffer))
     os.makedirs(os.path.dirname(abs_path), exist_ok=True)
@@ -243,7 +241,7 @@ def download_uptodown(version: str, country_code: CountryCode, containing_folder
     url = get_uptodown_download_url(version, country_code)
     stream = get_uptodown(url, stream=True)
     if stream.status_code == 404:
-        return tbcml.Result(False, error=f"Download url returned 404: {url}")
+        raise ValueError(f"Download url returned 404: {url}")
     filename = f'{country_code}-{version}.apk'
     abs_path = os.path.join(containing_folder, filename)
 
@@ -337,7 +335,7 @@ def download_apkpure(version: str, country_code: CountryCode, containing_folder:
 
     stream = scraper.get(url, stream=True, timeout=10)
     if stream.status_code == 404:
-        return tbcml.Result(False, error=f"Download url returned 404: {url}")
+        raise ValueError(f"Download url returned 404: {url}")
     filename = f'{country_code}-{version}.apk'
     abs_path = os.path.join(containing_folder, filename)
 
