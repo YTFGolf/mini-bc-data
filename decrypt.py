@@ -141,27 +141,16 @@ def unpack_pack(pk_file, pk_base_name, list_data, cc, save_to_base):
 
     print()
 
-def decryptfile(source_base_path, file):
-    list_file = os.path.join(source_base_path, 'assets', f'{file}.list')
-    pack_file = os.path.join(source_base_path, 'assets', f'{file}.pack')
-
-    list_data = unpack_list(open_file_b(list_file))
-    if list_data == b'0\n':
-        print(f'skipping {file}')
+def decryptfile(list_data, pack_data, base_name, cc, targ_base_path):
+    list_data = unpack_list(list_data).decode("utf-8")
+    if list_data == '0\n':
+        print(f'skipping {base_name}')
         return
 
-    extracted_name = os.path.basename(source_base_path)
-    targ_base_path = os.path.join('./data/decrypted', extracted_name, file)
     print("extracting to", targ_base_path)
     os.makedirs(targ_base_path, exist_ok=True)
 
-    [lang, *_] = extracted_name.partition('-')
-    cc = CountryCode.from_cc(lang)
-
-    pk_file = open_file_b(pack_file)
-    base_name = os.path.basename(pack_file)
-    list_data = list_data.decode("utf-8")
-    unpack_pack(pk_file, base_name, list_data, cc, targ_base_path)
+    unpack_pack(pack_data, base_name, list_data, cc, targ_base_path)
 
 if __name__ == '__main__':
     container = sys.argv[1].rstrip('/\\')
@@ -172,5 +161,17 @@ if __name__ == '__main__':
             names.append(name)
     names.sort()
 
+    extracted_name = os.path.basename(container)
+    [lang, *_] = extracted_name.partition('-')
+    cc = CountryCode.from_cc(lang)
+
     for name in names:
-        decryptfile(container, name)
+        list_file = os.path.join(container, 'assets', f'{name}.list')
+        list_data = open_file_b(list_file)
+
+        pack_file = os.path.join(container, 'assets', f'{name}.pack')
+        pack_data = open_file_b(pack_file)
+
+        targ_base_path = os.path.join('./data/decrypted', extracted_name, name)
+
+        decryptfile(list_data, pack_data, name, cc, targ_base_path)
