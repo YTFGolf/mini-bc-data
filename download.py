@@ -5,6 +5,7 @@ from typing import Literal, Any, TypedDict
 import requests
 import os
 import sys
+import re
 
 ################################################################################
 # Most code in this file is taken from tbcml, in particular src/tbcml/io/apk.py
@@ -66,6 +67,13 @@ class CountryCode(enum.Enum):
 
         raise ValueError(f'{code!r} is not a valid country code!')
 
+    def get_patch_code(self) -> str:
+        """For apkpure"""
+        if self == CountryCode.JP:
+            return ""
+        else:
+            return self.value
+
     def __str__(self):
         return self.value
 
@@ -89,7 +97,7 @@ class UptodownVersion(TypedDict):
 def get_uptodown(url, **kwargs):
     return requests.get(url, headers={'user-agent': "WWR's auto APK getter"}, **kwargs)
 
-def get_apkpure_version_url(cc: CountryCode) -> str:
+def get_apkpure_versions_page(cc: CountryCode) -> str:
     if cc == CountryCode.JP:
         url = "https://apkpure.com/%E3%81%AB%E3%82%83%E3%82%93%E3%81%93%E5%A4%A7%E6%88%A6%E4%BA%89/jp.co.ponos.battlecats/versions"
     elif cc == CountryCode.KR:
@@ -159,7 +167,7 @@ def get_uptodown_download_url(version: str, country_code: CountryCode) -> str:
     if len(n) == 0:
         raise ValueError(
             f'Version {country_code}/{version!r} could not be found on uptodown. ' \
-            f'You may want to manually download from {get_apkpure_version_url(country_code)}.'
+            f'You may want to manually download from {get_apkpure_versions_page(country_code)}.'
         )
 
     res = get_uptodown(n[0]).text
@@ -209,12 +217,7 @@ def progress(
         end="",
     )
 
-def download_uptodown(version: str, country_code: CountryCode, containing_folder: str):
-    url = get_uptodown_download_url(version, country_code)
-    stream = get_uptodown(url, stream=True)
-    if stream.status_code == 404:
-        return tbcml.Result(False, error=f"Download url returned 404: {url}")
-
+def download_stream(stream, abs_path):
     _total_length = int(stream.headers.get("content-length"))  # type: ignore
 
     dl = 0
@@ -231,8 +234,6 @@ def download_uptodown(version: str, country_code: CountryCode, containing_folder
                 )
 
     apk = to_data(b"".join(buffer))
-    filename = f'{country_code}-{version}.apk'
-    abs_path = os.path.join(containing_folder, filename)
     os.makedirs(os.path.dirname(abs_path), exist_ok=True)
 
     with open(abs_path, "wb") as f:
@@ -240,17 +241,109 @@ def download_uptodown(version: str, country_code: CountryCode, containing_folder
         print()
         print(abs_path)
 
+def download_uptodown(version: str, country_code: CountryCode, containing_folder: str):
+    url = get_uptodown_download_url(version, country_code)
+    stream = get_uptodown(url, stream=True)
+    if stream.status_code == 404:
+        return tbcml.Result(False, error=f"Download url returned 404: {url}")
+    filename = f'{country_code}-{version}.apk'
+    abs_path = os.path.join(containing_folder, filename)
+
+    download_stream(stream, abs_path)
+
+def get_apkpure_versions(country_code: CountryCode) -> list[str]:
+    import cloudscraper
+    url = get_apkpure_versions_page(country_code)
+
+    # https://github.com/VeNoMouS/cloudscraper?tab=readme-ov-file#v3-with-different-javascript-interpreters
+    scraper = cloudscraper.create_scraper(
+        delay=5,
+        # interpreter='nodejs',
+    )
+    # scraper.headers.update({
+    #     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36"
+    # })
+    # should realistically do some looping thing between different scrapers
+
+    res = scraper.get(url)
+    html = res.text
+
+    if "<title>Just a moment...</title>" in html:
+        raise ValueError('apkpure request blocked by cloudflare')
+        # quit(html)
+
+    lists = re.findall(r'<ul[^>]*ver-wrap[^>]*>(?:.|\n)*?</ul>', html)
+    # ver-wrap class
+
+    versions = []
+    for ls in lists:
+        items = re.findall(r'<li[^>]*>(?:.|\n)*?</li>', ls)
+        for item in items:
+            link_s = re.search(r'<a(?:[^>]|\n)*>', item)
+            if not link_s:
+                continue
+            link = link_s.group(0)
+            ver = re.search(r'data-dt-version="([^"]*)"', link)
+            if not ver:
+                raise ValueError('interface changed; code needs to be updated')
+            versions.append(ver.group(1))
+
+    return sorted(dict.fromkeys(versions), reverse=True)
+
+def get_gv_int(game_version: str) -> int:
+    split_gv = game_version.split(".")
+    if len(split_gv) == 2:
+        split_gv.append("0")
+    final = ""
+    for split in split_gv:
+        final += split.zfill(2)
+
+    return int(final)
+
+def get_apkpure_dl_link(version: str, country_code: CountryCode) -> str:
+    versions = get_apkpure_versions(country_code)
+
+    version_split = version.split('.')
+    to_download = []
+    for version2 in versions:
+        for (n1, n2) in zip(version_split, version2.split('.')):
+            if n1 != n2:
+                break
+        else:
+            to_download.append(version2)
+
+    if len(to_download) == 0:
+        raise ValueError(
+            f'Version {country_code}/{version!r} could not be found on apkpure.'
+        )
+
+    ver = str(get_gv_int(to_download[0])) + '0'
+    vendor = 'jp.co.ponos.battlecats' + country_code.get_patch_code()
+    return f"https://d.apkpure.com/b/XAPK/{vendor}?versionCode={ver}"
+
+def download_apkpure(version: str, country_code: CountryCode, containing_folder: str):
+    print(f'Version {country_code}/{version!r} could not be found on uptodown. Trying apkpure.')
+    try:
+        import cloudscraper
+    except ModuleNotFoundError:
+        raise ValueError('Could not import cloudscraper. Run `pip install cloudscraper` or consult the appropriate documentation.')
+
+    scraper = cloudscraper.create_scraper()
+    scraper.headers.update({
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36"
+    })
+
+    url = get_apkpure_dl_link(version, country_code)
+    stream = scraper.get(url, stream=True, timeout=10)
+    if stream.status_code == 404:
+        return tbcml.Result(False, error=f"Download url returned 404: {url}")
+    filename = f'{country_code}-{version}.apk'
+    abs_path = os.path.join(containing_folder, filename)
+
+    download_stream(stream, abs_path)
+
+
 if __name__ == '__main__':
-
-    # https://stackoverflow.com/a/14981125
-    def eprint(*args, **kwargs):
-        print(*args, file=sys.stderr, **kwargs)
-    raw_print = print
-    def print(*args, **kwargs):
-        raw_print(*args, **kwargs)
-        # if you want to disable printing comment out this line
-        pass
-
     try:
         version = sys.argv[1]
         cc = sys.argv[2]
@@ -260,9 +353,17 @@ if __name__ == '__main__':
     try:
         containing_folder = sys.argv[3]
     except IndexError:
-        containing_folder = os.getcwd() + '/data'
+        containing_folder = os.getcwd() + '/data/apk'
         print(f'Using default containing folder: {containing_folder!r}')
 
     cc = CountryCode.from_cc(cc)
 
-    download_uptodown(version, cc, containing_folder)
+    try:
+        download_uptodown(version, cc, containing_folder)
+    except ValueError as e:
+        print(e)
+        try:
+            download_apkpure(version, cc, containing_folder)
+        except (ValueError, TypeError) as e:
+            print(f'Error when trying to download from apkpure: {e}')
+            print(f'Try manually downloading the apk (e.g. see {get_apkpure_versions_page(cc)})')
