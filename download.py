@@ -328,12 +328,15 @@ def download_apkpure(version: str, country_code: CountryCode, containing_folder:
     except ModuleNotFoundError:
         raise ValueError('Could not import cloudscraper. Run `pip install cloudscraper` or consult the appropriate documentation.')
 
+    url = get_apkpure_dl_link(version, country_code)
+
+    from time import sleep
+    sleep(0.5)
     scraper = cloudscraper.create_scraper()
     scraper.headers.update({
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36"
     })
 
-    url = get_apkpure_dl_link(version, country_code)
     stream = scraper.get(url, stream=True, timeout=10)
     if stream.status_code == 404:
         return tbcml.Result(False, error=f"Download url returned 404: {url}")
@@ -365,5 +368,5 @@ if __name__ == '__main__':
         try:
             download_apkpure(version, cc, containing_folder)
         except (ValueError, TypeError) as e:
-            print(f'Error when trying to download from apkpure: {e}')
+            print(f'Error when trying to download from apkpure: {e.__traceback__}')
             print(f'Try manually downloading the apk (e.g. see {get_apkpure_versions_page(cc)})')
