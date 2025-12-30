@@ -6,7 +6,7 @@ Provides a few helpful scripts to make downloading and extracting The Battle Cat
 - Extract the main bit.
 - Run the decrypter contained in <https://codeberg.org/fieryhenry/BCGM-Python/>.
 
-This project aims to provide a few scritps that partially automate this process. Or maybe the point is to generate a minimal bit of code that can do these?
+This project aims to provide a few scripts that partially automate this process. Or maybe the point is to generate a minimal bit of code that can do these?
 
 ## New extraction process
 
