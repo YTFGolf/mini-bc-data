@@ -4,6 +4,7 @@ import sys
 import os
 from Crypto.Cipher import AES
 from download import progress, CountryCode
+from typing import Optional
 
 # this file is adapted from
 # https://codeberg.org/fieryhenry/BCGM-Python/src/branch/master/src/BCGM_Python/encrypt_decrypt/decrypt_pack.py
@@ -101,13 +102,13 @@ def get_key_iv_from_cc(cc: CountryCode) -> tuple[str, str]:
         raise ValueError("Unknown country code")
     return key, iv
 
-def decrypt_pack(chunk_data, cc, pk_name):
+def decrypt_pack(chunk_data: bytes, cc: CountryCode, pack_name: str) -> bytes:
     aes_mode = AES.MODE_CBC
 
     skey, siv = get_key_iv_from_cc(cc)
     key, iv = bytes.fromhex(skey), bytes.fromhex(siv)
 
-    if "server" in pk_name.lower():
+    if "server" in pack_name.lower():
         key = md5_str("battlecats")
         iv = None
         aes_mode = AES.MODE_ECB
@@ -119,30 +120,24 @@ def decrypt_pack(chunk_data, cc, pk_name):
     decrypted_data = remove_pkcs7_padding(data=decrypted_data)
     return decrypted_data
 
-def unpack_pack(pk_file_path, ls_data, cc, base_path):
-    list_data = ls_data.decode("utf-8")
-    split_data = parse_csv_file(None, list_data.split("\n"), 3)
+def unpack_pack(pk_file, pk_base_name, list_data, cc, save_to_base):
+    files_info = parse_csv_file(None, list_data.split("\n"), 3)
 
-    pack_data = open_file_b(pk_file_path)
+    for i, file_info in enumerate(files_info):
+        name = file_info[0]
+        start_offset = int(file_info[1])
+        length = int(file_info[2])
 
-    for i in range(len(split_data)):
-        file = split_data[i]
-
-        name = file[0]
-        start_offset = int(file[1])
-        length = int(file[2])
-
-        pk_chunk = pack_data[start_offset : start_offset + length]
-        base_name = os.path.basename(pk_file_path)
-        if "imagedatalocal" in base_name.lower():
+        pk_chunk = pk_file[start_offset : start_offset + length]
+        if "imagedatalocal" in pk_base_name.lower():
             pk_chunk_decrypted = pk_chunk
         else:
-            pk_chunk_decrypted = decrypt_pack(pk_chunk, cc, base_name)
+            pk_chunk_decrypted = decrypt_pack(pk_chunk, cc, pk_base_name)
 
-        open(os.path.join(base_path, name), "wb").write(pk_chunk_decrypted)
+        open(os.path.join(save_to_base, name), "wb").write(pk_chunk_decrypted)
 
         j = i + 1
-        progress(j / len(split_data), j, len(split_data), False)
+        progress(j / len(files_info), j, len(files_info), False)
 
     print()
 
@@ -163,7 +158,10 @@ def decryptfile(source_base_path, file):
     [lang, *_] = extracted_name.partition('-')
     cc = CountryCode.from_cc(lang)
 
-    unpack_pack(pack_file, list_data, cc, targ_base_path)
+    pk_file = open_file_b(pack_file)
+    base_name = os.path.basename(pack_file)
+    list_data = list_data.decode("utf-8")
+    unpack_pack(pk_file, base_name, list_data, cc, targ_base_path)
 
 if __name__ == '__main__':
     container = sys.argv[1].rstrip('/\\')
