@@ -6,6 +6,7 @@ import requests
 import os
 import sys
 import re
+import traceback
 
 ################################################################################
 # Most code in this file is taken from tbcml, in particular src/tbcml/io/apk.py
@@ -364,5 +365,5 @@ if __name__ == '__main__':
         try:
             download_apkpure(version, cc, containing_folder)
         except (ValueError, TypeError) as e:
-            print(f'Error when trying to download from apkpure: {e.__traceback__}')
+            print(f'Error when trying to download from apkpure: {traceback.format_exc()}')
             print(f'Try manually downloading the apk (e.g. see {get_apkpure_versions_page(cc)})')
