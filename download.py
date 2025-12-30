@@ -46,7 +46,7 @@ class CountryCode(enum.Enum):
     TW = "tw"
 
     @staticmethod
-    def from_cc(cc: Literal["en"] | Literal["jp"] | Literal["kr"] | Literal["tw"] | CountryCode):
+    def from_cc(cc: str | Literal["en"] | Literal["jp"] | Literal["kr"] | Literal["tw"] | CountryCode):
         if isinstance(cc, str):
             return CountryCode.from_code(cc)
         return cc
@@ -94,7 +94,7 @@ class UptodownVersion(TypedDict):
     versionURL: VersionURL
 
 
-def get_uptodown(url, **kwargs):
+def get_uptodown(url: str, **kwargs: Any):
     return requests.get(url, headers={'user-agent': "WWR's auto APK getter"}, **kwargs)
 
 def get_apkpure_versions_page(cc: CountryCode) -> str:
@@ -137,7 +137,7 @@ def get_uptodown_apk_json(country_code: CountryCode) -> list[UptodownVersion]:
     if app_id is None:
         return []
     counter = 0
-    versions: list[dict[str, Any]] = []
+    versions: list[UptodownVersion] = []
     while True:
         url = f"https://{package_name}.en.uptodown.com/android/apps/{app_id}/versions/{counter}"
         versions_data = get_uptodown(url).json().get("data")
@@ -152,8 +152,8 @@ def get_uptodown_apk_json(country_code: CountryCode) -> list[UptodownVersion]:
 
 def get_uptodown_download_url(version: str, country_code: CountryCode) -> str:
     js = get_uptodown_apk_json(country_code)
-    n = []
 
+    n: list[str] = []
     version_split = version.split('.')
     for version2 in js:
         for (n1, n2) in zip(version_split, version2['version'].split('.')):
@@ -188,8 +188,6 @@ def to_data(data: Any) -> bytes:
         return str(value).encode("utf-8")
     elif isinstance(data, int):
         return str(data).encode("utf-8")
-    elif isinstance(data, Data):
-        return data.data
     elif data is None:
         return b""
     else:
@@ -217,7 +215,7 @@ def progress(
         end="",
     )
 
-def download_stream(stream, abs_path):
+def download_stream(stream: requests.Response, abs_path: str):
     _total_length = int(stream.headers.get("content-length"))  # type: ignore
 
     dl = 0
@@ -275,7 +273,7 @@ def get_apkpure_versions(country_code: CountryCode) -> list[str]:
     lists = re.findall(r'<ul[^>]*ver-wrap[^>]*>(?:.|\n)*?</ul>', html)
     # ver-wrap class
 
-    versions = []
+    versions: list[str] = []
     for ls in lists:
         items = re.findall(r'<li[^>]*>(?:.|\n)*?</li>', ls)
         for item in items:
@@ -304,7 +302,7 @@ def get_apkpure_dl_link(version: str, country_code: CountryCode) -> str:
     versions = get_apkpure_versions(country_code)
 
     version_split = version.split('.')
-    to_download = []
+    to_download: list[str] = []
     for version2 in versions:
         for (n1, n2) in zip(version_split, version2.split('.')):
             if n1 != n2:
