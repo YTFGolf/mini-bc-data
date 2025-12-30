@@ -120,7 +120,7 @@ def decrypt_pack(chunk_data: bytes, cc: CountryCode, pack_name: str) -> bytes:
     decrypted_data = remove_pkcs7_padding(data=decrypted_data)
     return decrypted_data
 
-def unpack_pack(pk_file, pk_base_name, list_data, cc, save_to_base):
+def unpack_pack(list_data: bytes, pack_data: bytes, base_name: str, cc: CountryCode, targ_base_path: str):
     files_info = parse_csv_file(None, list_data.split("\n"), 3)
 
     for i, file_info in enumerate(files_info):
@@ -128,20 +128,27 @@ def unpack_pack(pk_file, pk_base_name, list_data, cc, save_to_base):
         start_offset = int(file_info[1])
         length = int(file_info[2])
 
-        pk_chunk = pk_file[start_offset : start_offset + length]
-        if "imagedatalocal" in pk_base_name.lower():
+        pk_chunk = pack_data[start_offset : start_offset + length]
+        if "imagedatalocal" in base_name.lower():
             pk_chunk_decrypted = pk_chunk
         else:
-            pk_chunk_decrypted = decrypt_pack(pk_chunk, cc, pk_base_name)
+            pk_chunk_decrypted = decrypt_pack(pk_chunk, cc, base_name)
 
-        open(os.path.join(save_to_base, name), "wb").write(pk_chunk_decrypted)
+        open(os.path.join(targ_base_path, name), "wb").write(pk_chunk_decrypted)
 
         j = i + 1
         progress(j / len(files_info), j, len(files_info), False)
 
     print()
 
-def decryptfile(list_data, pack_data, base_name, cc, targ_base_path):
+def decryptfile(list_data: bytes, pack_data: bytes, base_name: str, cc: CountryCode, targ_base_path: str):
+    """
+    - list_data: content of the .list file
+    - pack_data: content of the .pack file
+    - base_name: e.g. DataLocal
+    - cc: lang
+    - targ_base_path: e.g. ./data/decrypted/en-15.0/DataLocal
+    """
     list_data = unpack_list(list_data).decode("utf-8")
     if list_data == '0\n':
         print(f'skipping {base_name}')
@@ -150,7 +157,7 @@ def decryptfile(list_data, pack_data, base_name, cc, targ_base_path):
     print("extracting to", targ_base_path)
     os.makedirs(targ_base_path, exist_ok=True)
 
-    unpack_pack(pack_data, base_name, list_data, cc, targ_base_path)
+    unpack_pack(list_data, pack_data, base_name, cc, targ_base_path)
 
 if __name__ == '__main__':
     container = sys.argv[1].rstrip('/\\')
