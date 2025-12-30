@@ -24,9 +24,9 @@ Instead of running simpleapk, you could:
 
 Main goal is just to do the install process with as little code as possible.
 
-- [ ] Download APKs.
+- [x] Download APKs.
   - [x] Uptodown: done although a bit brittle
-  - [ ] APKPure: not done, requires the cloudscraper library to circumvent anti-abuse measures. Probably not worth it but I might end up doing it anyway.
+  - [x] APKPure: sort of, requires the cloudscraper library to circumvent anti-abuse measures. Unreliable, see [#1](https://github.com/YTFGolf/mini-bc-data/issues/1).
 - [x] Extract APKS
 - [x] Decrypt data
 
@@ -34,6 +34,7 @@ Main goal is just to do the install process with as little code as possible.
 
 - Python (tested on 3.9 and 3.12)
 - download: [requests](https://docs.python-requests.org/en/latest/index.html) library
+  - To enable downloading from apkpure, you will also need the [cloudscraper](https://pypi.org/project/cloudscraper/) library. This feature is not essential, see [#1](https://github.com/YTFGolf/mini-bc-data/issues/1) for more details.
 - decrypt/simpleapk: [pycryptodome](https://pypi.org/project/pycryptodome/) package
 
 ## Licensing
