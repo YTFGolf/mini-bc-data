@@ -13,6 +13,10 @@ This project aims to provide a few scritps that partially automate this process.
 Where it says 14.7, you can replace that with 14.7.1 or 14.7.0 to get specific sub-versions. Technically putting "14" as the number will also get you the same as "14.7" but that's more a bug I can't be bothered to fix.
 
 - Run the download script for the appropriate version e.g. `python download.py 14.7 en`. This might take a bit. If it fails it will probably tell you to download it yourself.
+- Run the simpleapk script. The script assumes the apk file will be of the form `en-14.7.apk` so make sure it's like this. The script will tell you where it's extracting and decrypting data.
+
+Instead of running simpleapk, you could:
+
 - Run the extract script. The script assumes the apk file will be of the form `en-14.7.apk` so make sure it's like this. The script will tell you where it's extracting data.
 - Run the decrypt script. The previous step will tell you where it's extracted data to. If you extracted it manually then the script will assume all data is in the assets folder, e.g. `mini-bc-data/data/extracted/en-14.7/assets/DataLocal.pack` will be one file it will try to extract if you did everything using this script.
 
@@ -26,13 +30,11 @@ Main goal is just to do the install process with as little code as possible.
 - [x] Extract APKS
 - [x] Decrypt data
 
-Could probably merge the extract and decrypt stages.
-
 ## Requirements
 
 - Python (tested on 3.9 and 3.12)
 - download: [requests](https://docs.python-requests.org/en/latest/index.html) library
-- decrypt: [pycryptodome](https://pypi.org/project/pycryptodome/) package
+- decrypt/simpleapk: [pycryptodome](https://pypi.org/project/pycryptodome/) package
 
 ## Licensing
 
