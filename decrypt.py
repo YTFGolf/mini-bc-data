@@ -65,8 +65,10 @@ def unpack_list(list_file_raw: bytes) -> bytes:
     decrypted_data = remove_pkcs7_padding(data=decrypted_data)
     return decrypted_data
 
-def parse_csv_file(path: str, lines: Optional[list[str]] = None, min_length = 0, blacklist = None) -> list[list[str]]:
+def parse_csv_file(path: Optional[str], lines: Optional[list[str]] = None, min_length = 0, blacklist = None) -> list[list[str]]:
     if not lines:
+        if not path:
+            raise ValueError('Attempting to parse csv file that cannot be read')
         lines = open(path, "r", encoding="utf-8").readlines()
 
     data: list[list[str]] = []
@@ -103,19 +105,18 @@ def get_key_iv_from_cc(cc: CountryCode) -> tuple[str, str]:
     return key, iv
 
 def decrypt_pack(chunk_data: bytes, cc: CountryCode, pack_name: str) -> bytes:
-    aes_mode = AES.MODE_CBC
-
-    skey, siv = get_key_iv_from_cc(cc)
-    key, iv = bytes.fromhex(skey), bytes.fromhex(siv)
-
     if "server" in pack_name.lower():
         key = md5_str("battlecats")
-        iv = None
         aes_mode = AES.MODE_ECB
-    if iv:
-        cipher = AES.new(key, aes_mode, iv)
-    else:
+
         cipher = AES.new(key, aes_mode)
+    else:
+        aes_mode = AES.MODE_CBC
+        skey, siv = get_key_iv_from_cc(cc)
+        key, iv = bytes.fromhex(skey), bytes.fromhex(siv)
+
+        cipher = AES.new(key, aes_mode, iv)
+
     decrypted_data = cipher.decrypt(chunk_data)
     decrypted_data = remove_pkcs7_padding(data=decrypted_data)
     return decrypted_data
